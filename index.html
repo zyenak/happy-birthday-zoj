@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy Birthday Pyu Pyu</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Libre+Baskerville&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --sand: #f4e6d4;
@@ -23,97 +26,92 @@
             height: 100vh;
         }
 
-        /* Responsive Typography */
-        h1 { margin-top: 20px; font-size: 1.8rem; color: var(--deepOcean); }
-        #score { font-size: 1.1rem; margin-bottom: 10px; }
+        h1 { margin-top: 20px; font-size: 1.8rem; color: var(--deepOcean); padding: 0 10px; }
+        #score { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
 
         #gameArea {
             position: relative;
             width: 100%;
-            height: 70vh;
-            touch-action: manipulation; /* Prevents zooming on mobile taps */
+            height: 65vh;
+            touch-action: none; /* Critical for mobile responsiveness */
         }
 
-        /* Responsive Hearts */
+        /* Responsive Moving Hearts */
         .heart {
             position: absolute;
-            font-size: 50px; /* Smaller default */
+            font-size: 35px; /* Perfect size for mobile */
             cursor: pointer;
             user-select: none;
-            transition: transform 0.1s;
+            animation: floatAround 4s ease-in-out infinite alternate;
+            transition: opacity 0.2s;
         }
-        @media (max-width: 600px) {
-            .heart { font-size: 40px; }
-            h1 { font-size: 1.4rem; }
-            #letter { font-size: 1rem !important; padding: 15px !important; }
+
+        @keyframes floatAround {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(20px, -30px) rotate(15deg); }
+        }
+
+        @media (min-width: 1024px) {
+            .heart { font-size: 45px; } /* Slightly bigger for laptop */
         }
 
         /* Balloons */
         .balloon {
             position: absolute;
             bottom: -100px;
-            font-size: 45px;
+            font-size: 40px;
             transition: opacity 1s ease;
             z-index: 1;
         }
 
-        /* Final Screen Overlay */
+        /* Final Screen */
         #finalScreen {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            z-index: 100;
         }
 
         #letter {
-            max-width: 90%;
-            width: 500px;
+            max-width: 85%;
+            width: 550px;
             font-family: "Libre Baskerville", serif;
             font-size: 1.1rem;
-            line-height: 1.6;
-            white-space: pre-line; /* Keeps line breaks from the string */
+            line-height: 1.7;
+            color: #444;
             text-align: center;
+            padding: 20px;
         }
 
         button {
-            padding: 12px 28px;
+            padding: 14px 30px;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             background: var(--ocean);
             color: white;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-
-        canvas {
-            position: fixed;
-            top: 0; left: 0;
-            pointer-events: none;
-            z-index: 15;
         }
     </style>
 </head>
 <body>
 
-    <h1 id="title">Happy Birthday Pyu Pyu</h1>
+    <h1>Happy Birthday Pyu Pyu</h1>
     <div id="score">Score: 0</div>
-    <button id="gameBtn" onclick="startGame()">Start Catching ❤️</button>
+    <button id="gameBtn" onclick="startGame()">Start Game ❤️</button>
 
     <div id="gameArea"></div>
 
     <div id="finalScreen">
         <div id="letter"></div>
-        <button id="backBtn" style="display:none;" onclick="location.reload()">Play Again</button>
+        <button id="backBtn" style="display:none; margin-top: 30px;" onclick="location.reload()">Restart</button>
     </div>
-
-    <canvas id="confetti"></canvas>
 
 <script>
     let score = 0;
@@ -123,8 +121,6 @@
     let balloonLoop;
     const gameArea = document.getElementById("gameArea");
 
-    // --- GAME LOGIC ---
-
     function startGame() {
         score = 0;
         running = true;
@@ -132,13 +128,13 @@
         document.getElementById("score").innerText = "Score: " + score;
         document.getElementById("gameBtn").style.display = "none";
         
-        // Clear previous state
         gameArea.innerHTML = "";
         
-        spawnLoop = setInterval(spawnHeart, 1000);
-        balloonLoop = setInterval(spawnBalloon, 2000);
+        // Faster spawning: Hearts appear every 600ms
+        spawnLoop = setInterval(spawnHeart, 600);
+        balloonLoop = setInterval(spawnBalloon, 1800);
 
-        setTimeout(endGame, 10000); // 10 second game
+        setTimeout(endGame, 12000); // 12 second game
     }
 
     function spawnHeart() {
@@ -146,18 +142,28 @@
         const heart = document.createElement("div");
         heart.className = "heart";
         heart.innerHTML = "❤️";
-        heart.style.left = Math.random() * 80 + 10 + "%";
-        heart.style.top = Math.random() * 70 + 10 + "%";
         
-        heart.onclick = () => {
+        // Random positions within the game area
+        const x = Math.random() * (window.innerWidth - 50);
+        const y = Math.random() * (gameArea.offsetHeight - 50);
+        
+        heart.style.left = x + "px";
+        heart.style.top = y + "px";
+        
+        // Tap/Click logic
+        const collect = () => {
             score++;
             document.getElementById("score").innerText = "Score: " + score;
-            heart.style.transform = "scale(1.5)";
             heart.style.opacity = "0";
-            setTimeout(() => heart.remove(), 100);
+            setTimeout(() => heart.remove(), 200);
         };
+
+        heart.addEventListener('mousedown', collect);
+        heart.addEventListener('touchstart', (e) => { e.preventDefault(); collect(); });
+
         gameArea.appendChild(heart);
-        setTimeout(() => heart && heart.remove(), 2000);
+        // Hearts disappear after 2.5 seconds if not caught
+        setTimeout(() => { if(heart.parentElement) heart.remove(); }, 2500);
     }
 
     function spawnBalloon() {
@@ -169,96 +175,72 @@
         document.body.appendChild(b);
 
         let pos = -100;
+        let speed = 2 + Math.random() * 2;
         let id = setInterval(() => {
             if (pos > window.innerHeight + 100 || isEnding) {
                 clearInterval(id);
                 b.style.opacity = "0";
-                setTimeout(() => b.remove(), 1000);
+                setTimeout(() => b.remove(), 500);
             } else {
-                pos += 2;
+                pos += speed;
                 b.style.bottom = pos + "px";
             }
         }, 20);
     }
 
-    // --- END SEQUENCE ---
-
     function endGame() {
         running = false;
-        isEnding = true; // Stops new balloons
+        isEnding = true;
         clearInterval(spawnLoop);
         
-        // 1. Initial Blast
-        launchConfetti();
+        // 1. Initial professional confetti blast
+        const duration = 3 * 1000;
+        const end = Date.now() + duration;
 
-        // 2. Wait for blast to be visible, then show screen
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#5f9ea0', '#ff7096', '#ffffff']
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#5f9ea0', '#ff7096', '#ffffff']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+
+        // 2. Clear screen and show letter
         setTimeout(() => {
             document.getElementById("finalScreen").style.display = "flex";
-            // 3. Start Typewriter after a short delay
-            setTimeout(showLetter, 1000);
-        }, 1500);
+            showLetter();
+        }, 2500);
     }
-
-    // --- ENHANCED CONFETTI ---
-
-    const canvas = document.getElementById("confetti");
-    const ctx = canvas.getContext("2d");
-    let particles = [];
-
-    function launchConfetti() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        for (let i = 0; i < 150; i++) {
-            particles.push({
-                x: canvas.width / 2,
-                y: canvas.height / 2,
-                dirX: (Math.random() - 0.5) * 15,
-                dirY: (Math.random() - 0.5) * 15 - 5,
-                size: Math.random() * 8 + 4,
-                color: `hsl(${Math.random() * 360}, 80%, 60%)`,
-                gravity: 0.2
-            });
-        }
-        requestAnimationFrame(updateConfetti);
-    }
-
-    function updateConfetti() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach((p, i) => {
-            p.x += p.dirX;
-            p.y += p.dirY;
-            p.dirY += p.gravity;
-            
-            ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, p.size, p.size);
-
-            if (p.y > canvas.height) particles.splice(i, 1);
-        });
-        if (particles.length > 0) requestAnimationFrame(updateConfetti);
-    }
-
-    // --- TYPEWRITER ---
 
     function showLetter() {
-        const text = `My Pyu Pyu,
-
-        You spent the last few seconds catching hearts, but the truth is… you’ve been catching mine every single day.
-
-        Without even trying, you collect every little piece of it with your kindness, your laugh, and the way you make life feel lighter.
-
-        If love were a game, you’d already have the highest score.
-
-        Happy Birthday ❤️`;
+        const text = `My Pyu Pyu,\n\nYou spent the last few seconds catching hearts, but the truth is… you’ve been catching mine every single day.\n\nWithout even trying, you collect every little piece of it with your kindness, your laugh, and the way you make life feel lighter.\n\nIf love were a game, you’d already have the highest score.\n\nHappy Birthday ❤️`;
 
         const el = document.getElementById("letter");
         let i = 0;
         
         function type() {
             if (i < text.length) {
-                el.innerHTML += text.charAt(i);
+                // Handling new lines correctly
+                if (text.charAt(i) === '\n') {
+                    el.innerHTML += '<br>';
+                } else {
+                    el.innerHTML += text.charAt(i);
+                }
                 i++;
-                setTimeout(type, 40);
+                setTimeout(type, 45);
             } else {
                 document.getElementById("backBtn").style.display = "block";
             }
