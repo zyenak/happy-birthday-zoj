@@ -1,347 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Pyu Pyu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Libre+Baskerville&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sand: #f4e6d4;
+            --beige: #e8d7b9;
+            --ocean: #5f9ea0;
+            --deepOcean: #3c6e71;
+        }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, var(--sand), var(--beige));
+            color: #333;
+            text-align: center;
+            overflow: hidden;
+            height: 100vh;
+        }
 
-<title>Happy Birthday Pyu Pyu</title>
+        /* Responsive Typography */
+        h1 { margin-top: 20px; font-size: 1.8rem; color: var(--deepOcean); }
+        #score { font-size: 1.1rem; margin-bottom: 10px; }
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Libre+Baskerville&display=swap" rel="stylesheet">
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            touch-action: manipulation; /* Prevents zooming on mobile taps */
+        }
 
-<style>
+        /* Responsive Hearts */
+        .heart {
+            position: absolute;
+            font-size: 50px; /* Smaller default */
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        @media (max-width: 600px) {
+            .heart { font-size: 40px; }
+            h1 { font-size: 1.4rem; }
+            #letter { font-size: 1rem !important; padding: 15px !important; }
+        }
 
-:root{
---sand:#f4e6d4;
---beige:#e8d7b9;
---ocean:#5f9ea0;
---deepOcean:#3c6e71;
---driftwood:#8d6e63;
-}
+        /* Balloons */
+        .balloon {
+            position: absolute;
+            bottom: -100px;
+            font-size: 45px;
+            transition: opacity 1s ease;
+            z-index: 1;
+        }
 
-body{
-margin:0;
-font-family:Inter, sans-serif;
-background:linear-gradient(180deg,var(--sand),var(--beige));
-color:#333;
-text-align:center;
-overflow:hidden;
-}
+        /* Final Screen Overlay */
+        #finalScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
 
-h1{
-margin-top:30px;
-font-size:2rem;
-font-weight:600;
-color:var(--deepOcean);
-}
+        #letter {
+            max-width: 90%;
+            width: 500px;
+            font-family: "Libre Baskerville", serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            white-space: pre-line; /* Keeps line breaks from the string */
+            text-align: center;
+        }
 
-#message{
-margin-top:5px;
-color:#555;
-}
+        button {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 25px;
+            background: var(--ocean);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
 
-#score{
-margin-top:10px;
-font-size:1.2rem;
-}
-
-button{
-margin-top:15px;
-padding:12px 24px;
-border:none;
-border-radius:8px;
-background:var(--ocean);
-color:white;
-font-weight:600;
-cursor:pointer;
-}
-
-#gameArea{
-position:relative;
-width:100%;
-height:60vh;
-}
-
-/* HEARTS */
-
-.heart{
-position:absolute;
-font-size:65px;
-cursor:pointer;
-animation:floatUp 9s linear forwards;
-}
-
-@keyframes floatUp{
-0%{transform:translateY(0)}
-100%{transform:translateY(-300px);opacity:0}
-}
-
-/* BALLOONS */
-
-.balloon{
-position:absolute;
-bottom:-120px;
-font-size:55px;
-animation:rise 14s linear infinite;
-}
-
-@keyframes rise{
-0%{bottom:-120px}
-100%{bottom:110%}
-}
-
-/* FINAL SCREEN */
-
-#finalScreen{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-display:none;
-align-items:center;
-justify-content:center;
-flex-direction:column;
-}
-
-/* LETTER */
-
-#letter{
-max-width:650px;
-padding:30px;
-font-family:"Libre Baskerville", serif;
-font-size:1.2rem;
-line-height:1.8;
-color:#333;
-opacity:0;
-transform:translateY(20px);
-transition:all 1s ease;
-}
-
-#letter.show{
-opacity:1;
-transform:translateY(0);
-}
-
-#backBtn{
-margin-top:20px;
-background:var(--deepOcean);
-}
-
-/* CONFETTI CANVAS */
-
-canvas{
-position:fixed;
-top:0;
-left:0;
-pointer-events:none;
-}
-
-</style>
+        canvas {
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 15;
+        }
+    </style>
 </head>
-
 <body>
 
-<h1>Happy Birthday Pyu Pyu</h1>
-<div id="message">Catch as many hearts as you can ❤️</div>
-<div id="score">Score: 0</div>
+    <h1 id="title">Happy Birthday Pyu Pyu</h1>
+    <div id="score">Score: 0</div>
+    <button id="gameBtn" onclick="startGame()">Start Catching ❤️</button>
 
-<button id="gameBtn" onclick="startGame()">Start Game</button>
+    <div id="gameArea"></div>
 
-<div id="gameArea"></div>
+    <div id="finalScreen">
+        <div id="letter"></div>
+        <button id="backBtn" style="display:none;" onclick="location.reload()">Play Again</button>
+    </div>
 
-<div id="finalScreen">
-<div id="letter"></div>
-<button id="backBtn" onclick="restart()">Back to Game</button>
-</div>
-
-<canvas id="confetti"></canvas>
+    <canvas id="confetti"></canvas>
 
 <script>
-
-let score=0
-let running=false
-let spawnLoop
-
-const gameArea=document.getElementById("gameArea")
-
-/* GAME */
-
-function startGame(){
-
-score=0
-running=true
-
-document.getElementById("score").innerText="Score: "+score
-document.getElementById("gameBtn").innerText="Restart Game"
-
-clearInterval(spawnLoop)
-spawnLoop=setInterval(spawnHeart,1300)
-
-setTimeout(endGame,15000)
-
-}
-
-/* HEARTS */
-
-function spawnHeart(){
-
-if(!running) return
-
-const heart=document.createElement("div")
-heart.className="heart"
-heart.innerHTML="❤️"
-
-heart.style.left=Math.random()*85+"%"
-heart.style.top=Math.random()*60+"%"
-
-heart.onclick=()=>{
-score++
-document.getElementById("score").innerText="Score: "+score
-heart.remove()
-}
-
-gameArea.appendChild(heart)
-
-setTimeout(()=>heart.remove(),9000)
-
-}
-
-/* BALLOONS */
-
-function createBalloon(){
-
-const balloon=document.createElement("div")
-balloon.className="balloon"
-
-const colors=["🎈","🎈","🎈","🎈","🎈"]
-
-balloon.innerHTML=colors[Math.floor(Math.random()*colors.length)]
-
-balloon.style.left=Math.random()*100+"%"
-
-document.body.appendChild(balloon)
-
-setTimeout(()=>balloon.remove(),14000)
-
-}
-
-setInterval(createBalloon,2200)
-
-/* END GAME */
-
-function endGame(){
-
-running=false
-clearInterval(spawnLoop)
-
-document.getElementById("finalScreen").style.display="flex"
-
-launchConfetti()
-
-setTimeout(showLetter,2500)
-
-}
-
-/* CONFETTI */
-
-const canvas=document.getElementById("confetti")
-const ctx=canvas.getContext("2d")
-
-canvas.width=window.innerWidth
-canvas.height=window.innerHeight
-
-let confetti=[]
-
-function launchConfetti(){
-
-for(let i=0;i<350;i++){
-
-confetti.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height-500,
-size:Math.random()*8+4,
-speed:Math.random()*3+2,
-color:`hsl(${Math.random()*360},70%,60%)`
-})
-
-}
-
-animateConfetti()
-
-}
-
-function animateConfetti(){
-
-ctx.clearRect(0,0,canvas.width,canvas.height)
-
-confetti.forEach(c=>{
-ctx.fillStyle=c.color
-ctx.fillRect(c.x,c.y,c.size,c.size)
-
-c.y+=c.speed
-
-if(c.y>canvas.height){
-c.y=-10
-}
-})
-
-requestAnimationFrame(animateConfetti)
-
-}
-
-/* LETTER */
-
-function showLetter(){
-
-const text=`My Pyu Pyu,
-
-You spent the last few seconds catching hearts,
-but the truth is…
-
-you’ve been catching mine
-every single day.
-
-Without even trying,
-you collect every little piece of it
-with your kindness,
-your laugh,
-and the way you make life feel lighter.
-
-If love were a game,
-you’d already have the highest score.
-
-Happy Birthday ❤️`
-
-const letter=document.getElementById("letter")
-
-typeWriter(letter,text,0)
-
-}
-
-/* TYPEWRITER */
-
-function typeWriter(el,text,i){
-
-if(i<text.length){
-
-el.innerHTML+=text.charAt(i)
-el.classList.add("show")
-
-setTimeout(()=>typeWriter(el,text,i+1),28)
-
-}
-
-}
-
-/* RESTART */
-
-function restart(){
-location.reload()
-}
-
+    let score = 0;
+    let running = false;
+    let isEnding = false;
+    let spawnLoop;
+    let balloonLoop;
+    const gameArea = document.getElementById("gameArea");
+
+    // --- GAME LOGIC ---
+
+    function startGame() {
+        score = 0;
+        running = true;
+        isEnding = false;
+        document.getElementById("score").innerText = "Score: " + score;
+        document.getElementById("gameBtn").style.display = "none";
+        
+        // Clear previous state
+        gameArea.innerHTML = "";
+        
+        spawnLoop = setInterval(spawnHeart, 1000);
+        balloonLoop = setInterval(spawnBalloon, 2000);
+
+        setTimeout(endGame, 10000); // 10 second game
+    }
+
+    function spawnHeart() {
+        if (!running) return;
+        const heart = document.createElement("div");
+        heart.className = "heart";
+        heart.innerHTML = "❤️";
+        heart.style.left = Math.random() * 80 + 10 + "%";
+        heart.style.top = Math.random() * 70 + 10 + "%";
+        
+        heart.onclick = () => {
+            score++;
+            document.getElementById("score").innerText = "Score: " + score;
+            heart.style.transform = "scale(1.5)";
+            heart.style.opacity = "0";
+            setTimeout(() => heart.remove(), 100);
+        };
+        gameArea.appendChild(heart);
+        setTimeout(() => heart && heart.remove(), 2000);
+    }
+
+    function spawnBalloon() {
+        if (isEnding) return;
+        const b = document.createElement("div");
+        b.className = "balloon";
+        b.innerHTML = "🎈";
+        b.style.left = Math.random() * 90 + "%";
+        document.body.appendChild(b);
+
+        let pos = -100;
+        let id = setInterval(() => {
+            if (pos > window.innerHeight + 100 || isEnding) {
+                clearInterval(id);
+                b.style.opacity = "0";
+                setTimeout(() => b.remove(), 1000);
+            } else {
+                pos += 2;
+                b.style.bottom = pos + "px";
+            }
+        }, 20);
+    }
+
+    // --- END SEQUENCE ---
+
+    function endGame() {
+        running = false;
+        isEnding = true; // Stops new balloons
+        clearInterval(spawnLoop);
+        
+        // 1. Initial Blast
+        launchConfetti();
+
+        // 2. Wait for blast to be visible, then show screen
+        setTimeout(() => {
+            document.getElementById("finalScreen").style.display = "flex";
+            // 3. Start Typewriter after a short delay
+            setTimeout(showLetter, 1000);
+        }, 1500);
+    }
+
+    // --- ENHANCED CONFETTI ---
+
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function launchConfetti() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        for (let i = 0; i < 150; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                dirX: (Math.random() - 0.5) * 15,
+                dirY: (Math.random() - 0.5) * 15 - 5,
+                size: Math.random() * 8 + 4,
+                color: `hsl(${Math.random() * 360}, 80%, 60%)`,
+                gravity: 0.2
+            });
+        }
+        requestAnimationFrame(updateConfetti);
+    }
+
+    function updateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+            p.x += p.dirX;
+            p.y += p.dirY;
+            p.dirY += p.gravity;
+            
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+
+            if (p.y > canvas.height) particles.splice(i, 1);
+        });
+        if (particles.length > 0) requestAnimationFrame(updateConfetti);
+    }
+
+    // --- TYPEWRITER ---
+
+    function showLetter() {
+        const text = `My Pyu Pyu,
+
+        You spent the last few seconds catching hearts, but the truth is… you’ve been catching mine every single day.
+
+        Without even trying, you collect every little piece of it with your kindness, your laugh, and the way you make life feel lighter.
+
+        If love were a game, you’d already have the highest score.
+
+        Happy Birthday ❤️`;
+
+        const el = document.getElementById("letter");
+        let i = 0;
+        
+        function type() {
+            if (i < text.length) {
+                el.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, 40);
+            } else {
+                document.getElementById("backBtn").style.display = "block";
+            }
+        }
+        type();
+    }
 </script>
-
 </body>
 </html>
