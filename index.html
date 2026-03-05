@@ -1,115 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Happy Birthday Pyu Pyu ❤️</title>
+<title>Happy Birthday Pyu Pyu</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
 
 <style>
 
+:root{
+--bg1:#2f3e2e;
+--bg2:#4f6f52;
+--accent:#a9b388;
+--soft:#dde5d5;
+}
+
 body{
 margin:0;
-font-family:'Comic Sans MS', cursive;
-background:linear-gradient(135deg,#ffb6c1,#ffd6ec,#ffe4f3);
+font-family:Inter, sans-serif;
+background:linear-gradient(160deg,var(--bg1),var(--bg2));
+color:white;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:flex-start;
 text-align:center;
+min-height:100vh;
 overflow:hidden;
-color:#fff;
 }
+
+/* HEADER */
 
 h1{
-font-size:2.8rem;
-margin-top:30px;
-animation:bounce 2s infinite;
-}
-
-@keyframes bounce{
-0%,100%{transform:translateY(0)}
-50%{transform:translateY(-10px)}
+margin-top:40px;
+font-size:2rem;
+font-weight:600;
 }
 
 #message{
-font-size:1.2rem;
-padding:10px 25px;
+font-size:1rem;
+opacity:.9;
+margin-top:5px;
 }
 
 #score{
-font-size:1.4rem;
-margin-top:10px;
+margin-top:12px;
+font-size:1.2rem;
 }
 
+/* BUTTON */
+
 button{
-padding:14px 26px;
+margin-top:16px;
+padding:12px 24px;
+border-radius:8px;
 border:none;
-border-radius:25px;
-font-size:1.1rem;
-background:#ff4d8d;
-color:white;
+background:var(--accent);
+color:#243222;
+font-weight:600;
+font-size:1rem;
 cursor:pointer;
-margin-top:15px;
-box-shadow:0 4px 10px rgba(0,0,0,0.2);
 }
+
+/* GAME AREA */
 
 #gameArea{
 position:relative;
 width:100%;
-height:65vh;
-overflow:hidden;
+height:60vh;
+margin-top:10px;
 }
 
-/* HEARTS */
+/* HEART */
 
 .heart{
 position:absolute;
-font-size:55px;
-cursor:pointer;
-animation:floatUp 6s linear forwards;
-}
-
-@keyframes floatUp{
-from{transform:translateY(0);opacity:1}
-to{transform:translateY(-250px);opacity:0}
-}
-
-/* BALLOONS */
-
-.balloon{
-position:absolute;
-bottom:-120px;
 font-size:60px;
-animation:rise 12s linear infinite;
+cursor:pointer;
+animation:float 8s linear forwards;
 }
 
-@keyframes rise{
-from{bottom:-120px}
-to{bottom:110%}
+@keyframes float{
+0%{transform:translateY(0)}
+100%{transform:translateY(-280px);opacity:0}
 }
 
-/* CONFETTI */
+/* WHITE SCREEN */
 
-.confetti{
-position:absolute;
-width:10px;
-height:10px;
+#finalScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
 background:white;
-animation:fall 3s linear forwards;
-}
-
-@keyframes fall{
-from{transform:translateY(-100px)}
-to{transform:translateY(100vh)}
-}
-
-/* FINAL MESSAGE */
-
-#finalMessage{
-position:absolute;
-top:40%;
-left:50%;
-transform:translate(-50%,-50%);
-font-size:1.6rem;
 display:none;
-padding:20px;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+}
+
+/* LETTER */
+
+#letter{
+max-width:600px;
+padding:30px;
+color:#333;
+font-family:"Playfair Display", serif;
+font-size:1.2rem;
+line-height:1.7;
+opacity:0;
+transform:translateY(20px);
+transition:all 1s ease;
+}
+
+#letter.show{
+opacity:1;
+transform:translateY(0);
+}
+
+/* BACK BUTTON */
+
+#backBtn{
+margin-top:20px;
+background:#4f6f52;
+color:white;
+font-size:.9rem;
+padding:10px 18px;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+pointer-events:none;
 }
 
 </style>
@@ -117,132 +144,171 @@ padding:20px;
 
 <body>
 
-<h1>🎉 Happy Birthday Pyu Pyu 🎉</h1>
-
-<div id="message">
-Catch the hearts before they float away ❤️
-</div>
-
+<h1>Happy Birthday Pyu Pyu</h1>
+<div id="message">Catch the hearts ❤️</div>
 <div id="score">Score: 0</div>
 
-<button id="gameButton" onclick="startGame()">Start Game</button>
+<button id="gameBtn" onclick="startGame()">Start Game</button>
 
 <div id="gameArea"></div>
 
-<div id="finalMessage"></div>
+<div id="finalScreen">
+<div id="letter"></div>
+<button id="backBtn" onclick="restart()">Back to Game</button>
+</div>
+
+<canvas id="confetti"></canvas>
 
 <script>
 
 let score=0
-let gameRunning=false
+let running=false
 let spawnLoop
+
+const gameArea=document.getElementById("gameArea")
 
 function startGame(){
 
 score=0
-gameRunning=true
+running=true
+
 document.getElementById("score").innerText="Score: "+score
-
-document.getElementById("gameButton").innerText="Restart Game"
-
-document.getElementById("finalMessage").style.display="none"
+document.getElementById("gameBtn").innerText="Restart Game"
 
 clearInterval(spawnLoop)
+spawnLoop=setInterval(spawnHeart,1200)
 
-spawnLoop=setInterval(spawnHeart,900)
-
-setTimeout(endGame,20000)
+setTimeout(endGame,15000)
 
 }
 
 function spawnHeart(){
 
-if(!gameRunning) return
+if(!running) return
 
 const heart=document.createElement("div")
-
-heart.classList.add("heart")
+heart.className="heart"
 heart.innerHTML="❤️"
 
 heart.style.left=Math.random()*85+"%"
-heart.style.top=Math.random()*65+"%"
+heart.style.top=Math.random()*60+"%"
 
 heart.onclick=()=>{
-
 score++
 document.getElementById("score").innerText="Score: "+score
 heart.remove()
+}
+
+gameArea.appendChild(heart)
+
+setTimeout(()=>heart.remove(),8000)
 
 }
 
-document.getElementById("gameArea").appendChild(heart)
-
-setTimeout(()=>heart.remove(),6000)
-
-}
+/* END GAME */
 
 function endGame(){
 
-gameRunning=false
+running=false
 clearInterval(spawnLoop)
 
-confettiExplosion()
+document.getElementById("finalScreen").style.display="flex"
 
-const msg=document.getElementById("finalMessage")
+launchConfetti()
 
-msg.innerHTML=
-`
-💖 My sweetest Pyu Pyu 💖 <br><br>
-
-Every heart you caught is one reason<br>
-why I love you more each day.<br><br>
-
-You make my world softer,<br>
-brighter, and infinitely happier. 🌸<br><br>
-
-Happy Birthday my love ❤️
-`
-
-msg.style.display="block"
+setTimeout(showLetter,2500)
 
 }
 
-function confettiExplosion(){
+/* CONFETTI */
 
-for(let i=0;i<120;i++){
+const canvas=document.getElementById("confetti")
+const ctx=canvas.getContext("2d")
 
-const conf=document.createElement("div")
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
 
-conf.classList.add("confetti")
+let confetti=[]
 
-conf.style.left=Math.random()*100+"%"
-conf.style.background=`hsl(${Math.random()*360},80%,60%)`
+function launchConfetti(){
 
-document.body.appendChild(conf)
+for(let i=0;i<200;i++){
 
-setTimeout(()=>conf.remove(),3000)
+confetti.push({
+x:Math.random()*canvas.width,
+y:-20,
+r:Math.random()*6+4,
+d:Math.random()*50,
+color:`hsl(${Math.random()*360},70%,60%)`,
+tilt:Math.random()*10
+})
 
+}
+
+animateConfetti()
+
+}
+
+function animateConfetti(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+confetti.forEach(c=>{
+ctx.beginPath()
+ctx.arc(c.x,c.y,c.r,0,Math.PI*2)
+ctx.fillStyle=c.color
+ctx.fill()
+
+c.y+=3
+})
+
+requestAnimationFrame(animateConfetti)
+
+}
+
+/* LETTER */
+
+function showLetter(){
+
+const text=`My Pyu Pyu,
+
+Every little heart you caught is a reminder
+of how many reasons I have to love you.
+
+You make ordinary days feel softer,
+warmer, and brighter in ways
+I never knew were possible.
+
+I’m endlessly grateful for you,
+for your kindness,
+your laughter,
+and the way you make life feel like home.
+
+Happy Birthday ❤️`
+
+const letter=document.getElementById("letter")
+
+typeWriter(letter,text,0)
+
+}
+
+function typeWriter(el,text,i){
+
+if(i<text.length){
+el.innerHTML+=text.charAt(i)
+el.classList.add("show")
+setTimeout(()=>typeWriter(el,text,i+1),25)
 }
 
 }
 
-function createBalloon(){
+/* BACK */
 
-const balloon=document.createElement("div")
+function restart(){
 
-balloon.classList.add("balloon")
-
-balloon.innerHTML="🎈"
-
-balloon.style.left=Math.random()*100+"%"
-
-document.body.appendChild(balloon)
-
-setTimeout(()=>balloon.remove(),12000)
+location.reload()
 
 }
-
-setInterval(createBalloon,2000)
 
 </script>
 
